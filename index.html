@@ -1,0 +1,115 @@
+<html>
+  <head>
+    <script src="https://unpkg.com/react@16/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/axios/0.19.0/axios.js'></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/react-router-dom/5.0.1/react-router-dom.js'></script>
+  <style>
+    body {
+      font-family: Verdana;
+    }
+    nav {
+      display: flex;
+      justify-content: space-around;
+    }
+  </style>
+  </head>
+  <body>
+    <div id='root'></div>
+    <script type='text/babel'>
+      
+      const { render } = ReactDOM;
+      const { createElement, Component } = React;
+      const { HashRouter, Link, Route, Switch, Redirect } = ReactRouterDOM;
+
+      const Nav = ({ products }) => {
+        const createdNotes = notes.filter( note => note.status === '')
+        return (
+          <nav>
+            <NavLink to='/products/underFive'>Under 5 ({ products.length })</NavLink>
+            <NavLink to='/products/fiveAndOver'>5 And Over ({ products.length })</NavLink>
+          </nav>
+        );
+      }
+
+      const products = ( { products, match } ) => {
+      console.log(products)
+      return (
+        <div id='content'>
+          <ul> 
+            {
+              products.map(product => <li key={product.id}>
+              <Link to={`/products/${product.id}`}>
+              { product.name }
+              </Link>
+            </li>)
+            }
+          </ul>
+        </div>
+      )
+      this.setState({products})
+    }
+
+    class Products extends Component {
+      constructor() {
+        super();
+        this.state = {
+          product: {}
+        }
+      }
+      async componentDidMount() {
+        // const product = (await axios.get(`https://acme-users-api-rev.herokuapp.com/api/companies/:id/companyProfits/${this.props.match.params.id}`)).data;
+        // this.setState({ product });
+      }
+      async componentDidUpdate(prevProps) {
+        // if (this.props.match.params.id !== prevProps.match.params.id) {
+          // const product = (await axios.get(`https://acme-users-api-rev.herokuapp.com/api/companies/:id/companyProfits/${this.props.match.params.id}`)).data;
+          // this.setState({ product });
+        // }
+      }
+      render() {
+        const { product } = this.state;
+        console.log(product)
+        return (
+          <ul>
+            {
+
+              <hr />
+            }
+          </ul>
+        )
+      }
+    }
+
+      class App extends Component {
+        constructor() {
+          super();
+          this.state = {
+            underFive: [],
+            fiveAndOver: []
+          }
+        }
+        async componentDidMount() {
+          const products = (await axios.get('https://acme-users-api-rev.herokuapp.com/api/products')).data;
+          // this.setState({ products, companies, offerings });
+        }
+        render() {
+          return (
+            <h1> Acme 5 - Over / Under </h1>
+            <HashRouter>
+              <Route render={ () => <Nav products={products} /> } />
+              <Switch>
+                <Route path='/products/underFive'  render={ () => <Products products ={products} /> } />
+                <Route path='/products/fiveAndOver' render={ () => <Products products ={products} /> } />
+              </Switch>
+            </HashRouter>
+          );
+        }
+      }
+
+      const root = document.querySelector('#root');
+      render( <App />, root ); 
+    </script>
+  </body>
+</html>
