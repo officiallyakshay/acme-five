@@ -7,11 +7,17 @@
     <script src='https://cdnjs.cloudflare.com/ajax/libs/react-router-dom/5.0.1/react-router-dom.js'></script>
   <style>
     body {
-      font-family: Verdana;
+      font-family: 'Verdana';
     }
-    nav {
+    .nav {
       display: flex;
       justify-content: space-around;
+      padding: 1rem;
+      font-weight: 50%;
+    }
+    .selected {
+      border: solid 1px black;
+      padding: 0.5rem;
     }
   </style>
   </head>
@@ -23,85 +29,87 @@
       const { createElement, Component } = React;
       const { HashRouter, Link, Route, Switch, Redirect } = ReactRouterDOM;
 
-      const Nav = ({ products }) => {
-        const createdNotes = notes.filter( note => note.status === '')
+      const Nav = ({ underFive, fiveAndOver, products, companies, offerings, path }) => {
         return (
-          <nav>
-            <NavLink to='/products/underFive'>Under 5 ({ products.length })</NavLink>
-            <NavLink to='/products/fiveAndOver'>5 And Over ({ products.length })</NavLink>
-          </nav>
+          <div className='nav'>
+            <Link to='/products/underFive' className={path === '/underFive' ? 'selected' : ''}>Under 5 ({ products.length })</Link>
+            <Link to='/products/fiveAndOver' className={path === '/fiveAndOver' ? 'selected' : ''}>5 And Over ({ products.length })</Link>
+          </div>
         );
       }
 
-      const products = ( { products, match } ) => {
-      console.log(products)
-      return (
-        <div id='content'>
-          <ul> 
-            {
-              products.map(product => <li key={product.id}>
-              <Link to={`/products/${product.id}`}>
-              { product.name }
-              </Link>
-            </li>)
-            }
-          </ul>
-        </div>
-      )
-      this.setState({products})
-    }
+      const Products = ( { underFive, fiveAndOver, products, companies, offerings } ) => {
+        const processed = products.map( product => {
+          let sum = 0;
+          let companyName = ''
+          let lowestPrice = Infinity
+          const _offerings = offerings.filter( offering => offering.productId === product.id)
+            .map( offering => {
+              sum += offering.price
+              const company = companies.find( company => company.id === offering.companyId);
+              if (offering.price < lowestPrice) {
+                lowestPrice = offering.price;
+                companyName = company.name;
+              }
+              return {...offering, company: company }
+            });
+            return {...product, offerings: _offerings, averagePrice: sum / _offerings.length, lowestPrice: lowestPrice, companyName: companyName};
+        });
 
-    class Products extends Component {
-      constructor() {
-        super();
-        this.state = {
-          product: {}
-        }
-      }
-      async componentDidMount() {
-        // const product = (await axios.get(`https://acme-users-api-rev.herokuapp.com/api/companies/:id/companyProfits/${this.props.match.params.id}`)).data;
-        // this.setState({ product });
-      }
-      async componentDidUpdate(prevProps) {
-        // if (this.props.match.params.id !== prevProps.match.params.id) {
-          // const product = (await axios.get(`https://acme-users-api-rev.herokuapp.com/api/companies/:id/companyProfits/${this.props.match.params.id}`)).data;
-          // this.setState({ product });
-        // }
-      }
-      render() {
-        const { product } = this.state;
-        console.log(product)
         return (
-          <ul>
-            {
-
+          <div>
+          {
+            processed.map( product => <div key={ product.id }>
+              { product.name }
+              <br />
+              { product.suggestedPrice }.00
               <hr />
-            }
-          </ul>
-        )
+            </div>)
+          }
+          </div>
+        );
       }
-    }
 
       class App extends Component {
         constructor() {
           super();
           this.state = {
             underFive: [],
-            fiveAndOver: []
+            fiveAndOver: [],
+            products: [],
+            companies: [],
+            offerings: []
           }
         }
         async componentDidMount() {
-          const products = (await axios.get('https://acme-users-api-rev.herokuapp.com/api/products')).data;
-          // this.setState({ products, companies, offerings });
+          const urls = [
+            'https://acme-users-api-rev.herokuapp.com/api/products',
+            'https://acme-users-api-rev.herokuapp.com/api/companies',
+            'https://acme-users-api-rev.herokuapp.com/api/offerings'
+          ];
+          const responses = await Promise.all(urls.map( url => axios.get( url )))
+          const [products, companies, offerings] = responses.map( response => response.data );
+          this.setState({ products, companies, offerings });
         }
         render() {
+          const { underFive, fiveAndOver, products, companies, offerings } = this.state
           return (
-            <h1> Acme 5 - Over / Under </h1>
             <HashRouter>
-              <Route render={ () => <Nav products={products} /> } />
+              <Route render={ ({ location }) => <Nav path = { location.pathname } products = { products } /> } />
               <Switch>
-                <Route path='/products/underFive'  render={ () => <Products products ={products} /> } />
-                <Route path='/products/fiveAndOver' render={ () => <Products products ={products} /> } />
+                <Route path='/products/underFive'  render = { () => <Products
+                    products = { products }
+                    companies = { companies } 
+                    offerings = { offerings } 
+                  /> } 
+                />
+                <Route path='/products/fiveAndOver' render = { () => <Products
+                    products = { products }
+                    companies = { companies } 
+                    offerings = { offerings }
+                  /> } 
+                />
+                <Redirect to='/products/underFive' />
               </Switch>
             </HashRouter>
           );
