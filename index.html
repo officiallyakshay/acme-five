@@ -16,8 +16,9 @@
       font-weight: 50%;
     }
     .selected {
-      border: solid 1px black;
-      padding: 0.5rem;
+      background-color: tomato;
+      color: white;
+      padding: 1rem;
     }
   </style>
   </head>
@@ -29,16 +30,17 @@
       const { createElement, Component } = React;
       const { HashRouter, Link, Route, Switch, Redirect } = ReactRouterDOM;
 
-      const Nav = ({ underFive, fiveAndOver, products, companies, offerings, path }) => {
+      const Nav = ({ underTen, tenAndOver, products, companies, offerings, path }) => {
         return (
           <div className='nav'>
-            <Link to='/products/underFive' className={path === '/underFive' ? 'selected' : ''}>Under 5 ({ products.length })</Link>
-            <Link to='/products/fiveAndOver' className={path === '/fiveAndOver' ? 'selected' : ''}>5 And Over ({ products.length })</Link>
+            <Link to='/products/underTen' className={path === '/underTen' ? 'selected' : ''}>Under 10 ({ products.length })</Link>
+            <Link to='/products/tenAndOver' className={path === '/tenAndOver' ? 'selected' : ''}>10 And Over ({ products.length })</Link>
           </div>
         );
       }
 
-      const Products = ( { underFive, fiveAndOver, products, companies, offerings } ) => {
+      const Products = ( { underTen, tenAndOver, products, companies, offerings, match } ) => {
+        console.log(match)
         const processed = products.map( product => {
           let sum = 0;
           let companyName = ''
@@ -74,8 +76,8 @@
         constructor() {
           super();
           this.state = {
-            underFive: [],
-            fiveAndOver: [],
+            underTen: [],
+            tenAndOver: [],
             products: [],
             companies: [],
             offerings: []
@@ -92,24 +94,27 @@
           this.setState({ products, companies, offerings });
         }
         render() {
-          const { underFive, fiveAndOver, products, companies, offerings } = this.state
-          return (
+          const { underTen, tenAndOver, products, companies, offerings, match } = this.state
+          // console.log(match)
+          return (  
             <HashRouter>
-              <Route render={ ({ location }) => <Nav path = { location.pathname } products = { products } /> } />
+              <Route render={ ({ location }) => <Nav path = { location.pathname } products = { products } />  } />
               <Switch>
-                <Route path='/products/underFive'  render = { () => <Products
+                <Route path='/products/underTen'  render = { (props) => <Products
+                    match = { props.match }
                     products = { products }
                     companies = { companies } 
                     offerings = { offerings } 
                   /> } 
                 />
-                <Route path='/products/fiveAndOver' render = { () => <Products
+                <Route path='/products/tenAndOver' render = { (props) => <Products
+                    match = { props.match }
                     products = { products }
                     companies = { companies } 
                     offerings = { offerings }
                   /> } 
                 />
-                <Redirect to='/products/underFive' />
+                <Redirect to='/products/underTen' />
               </Switch>
             </HashRouter>
           );
