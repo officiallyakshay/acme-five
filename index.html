@@ -66,15 +66,15 @@
           let _underFive;
           let _fiveAndOver;
           if (match.params.priceRange === 'underFive') {
-              _underFive = _products.map( product => <div key={ product.id }>
-                  { product.name }
+              _underFive = _products.map( product => <div data-id= { product.id } key={ product.id }>
+                <Link to={`/products/underFive/${product.id}`}>{ product.name }</Link>
                 <br />
                   { product.suggestedPrice }.00
                 <hr />
               </div>)
           } else if (match.params.priceRange === 'fiveAndOver') {
-            _fiveAndOver = products_.map( product => <div key={ product.id }>
-                  { product.name }
+            _fiveAndOver = products_.map( product => <div data-id= { product.id } key={ product.id }>
+                  <Link to={`/products/fiveAndOver/${product.id}`}>{ product.name }</Link>
                 <br />
                   { product.suggestedPrice }.00
                 <hr />
@@ -82,37 +82,58 @@
           }
         return (
             <div>
-            {
-              <div>
               { _underFive }
               { _fiveAndOver }
-              </div>
-              // _fiveAndOver 
-              // (match.params.priceRange === 'underFive') ?
-              //   _products.map( product => <div key={ product.id }>
-              //     { product.name }
-              //   <br />
-              //     { product.suggestedPrice }.00
-              //   <hr />
-              // </div>)
-              // : (match.params.priceRange === 'fiveAndOver') 
-              //   products_.map( product => <div key={ product.id }>
-              //     { product.name }
-              //   <br />
-              //     { product.suggestedPrice }.00
-              //   <hr />
-              // </div>)
-              
-              // processed.map( product => <div key={ product.id }>
-              //   { product.name }
-              //   <br />
-              //   { product.suggestedPrice }.00
-              //   <hr />
-              // </div>)
-            }
             </div>
         );
       }
+
+      class ProductDetails extends Component {
+        constructor(props) {
+          super(props);
+          this.state = { 
+            underFive: [],
+            fiveAndOver: [],
+            products: [],
+            companies: [],
+            offerings: [],
+          }
+        }
+        async componentDidMount() {
+          const productData = (await axios.get(`https://acme-users-api-rev.herokuapp.com/api/products`)).data; 
+          const foundProduct = productData.find( product => product.id === this.props.id);
+          this.setState( foundProduct );
+          const urls = [
+            'https://acme-users-api-rev.herokuapp.com/api/products',
+            'https://acme-users-api-rev.herokuapp.com/api/companies',
+            'https://acme-users-api-rev.herokuapp.com/api/offerings'
+          ];
+          const responses = await Promise.all(urls.map( url => axios.get( url )))
+          const [products, companies, offerings] = responses.map( response => response.data );
+          this.setState({ products, companies, offerings });
+        }
+        render() {  
+          // console.log(this.state.companies)
+          const company = this.state.companies.map( company => console.log(company))
+          return ( 
+            <div>
+            {this.state.name}
+            <br />
+            offered at {this.state.suggestedPrice}
+            <br />
+            by {this.state.name}
+            < hr />
+            </div>)
+        }
+      }
+
+      // const ProductDetails = async (props) => {
+      //   const productData = (await axios.get(`https://acme-users-api-rev.herokuapp.com/api/products`)).data; 
+      //   // const foundProduct = productData.find( product => product.id === props.id)
+      //   // console.log(foundProduct)
+      //   return (< hr />)
+      // }
+
       class App extends Component {
         constructor() {
           super();
@@ -147,10 +168,7 @@
                     offerings = { offerings } 
                   /> } 
                 />
-                <Route path='/products/:priceRange/:id?' render = { (props) => 
-                    console.log(props.match.params.id)
-                 } 
-                />
+                <Route path='/products/:priceRange/:id?' render = { (props) => <ProductDetails id = { props.match.params.id } /> } />
                 <Redirect to='/products/underFive' />
               </Switch>
             </HashRouter>
