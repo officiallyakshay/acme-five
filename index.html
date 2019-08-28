@@ -114,14 +114,14 @@
         }
         render() {  
           // console.log(this.state.companies)
-          const company = this.state.companies.map( company => console.log(company))
+          const company = this.state.companies.map( company => company.name)
+          console.log(this.state)
           return ( 
             <div>
             {this.state.name}
             <br />
-            offered at {this.state.suggestedPrice}
-            <br />
-            by {this.state.name}
+            {this.state.products.map(product => <div>offered at {product.suggestedPrice}</div>)}
+            {this.state.companies.map(company => <div>by {company.name}</div>)}
             < hr />
             </div>)
         }
