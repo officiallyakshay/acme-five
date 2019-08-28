@@ -30,18 +30,21 @@
       const { createElement, Component } = React;
       const { HashRouter, Link, Route, Switch, Redirect } = ReactRouterDOM;
 
-      const Nav = ({ underTen, tenAndOver, products, companies, offerings, path }) => {
+      const Nav = ({ underFive, fiveAndOver, products, companies, offerings, path }) => {
+        const _products = products.filter( product => product.suggestedPrice < 5 )
+        const products_ = products.filter( product => product.suggestedPrice >= 5 )
         return (
           <div className='nav'>
-            <Link to='/products/underTen' className={path === '/products/underTen' ? 'selected' : ''}>Under 10 ({ products.length })</Link>
-            <Link to='/products/tenAndOver' className={path === '/products/tenAndOver' ? 'selected' : ''}>10 And Over ({ products.length })</Link>
+            <Link to='/products/underFive' className={path === '/products/underFive' ? 'selected' : ''}> Under 5 ({ _products.length })</Link>
+            <Link to='/products/fiveAndOver' className={path === '/products/fiveAndOver' ? 'selected' : ''}> 5 And Over ({ products_.length })</Link>
           </div>
         );
       }
 
-      const Products = ( { underTen, tenAndOver, products, companies, offerings, match } ) => {
-        console.log(match)
+      const Products = ( { underFive, fiveAndOver, products, companies, offerings, match } ) => {
         const processed = products.map( product => {
+          <Link to={`products/${match.params.priceRange}/${product.id}`}>{ product }</Link>
+            // console.log(product.suggestedPrice)
           let sum = 0;
           let companyName = ''
           let lowestPrice = Infinity
@@ -57,30 +60,68 @@
             });
             return {...product, offerings: _offerings, averagePrice: sum / _offerings.length, lowestPrice: lowestPrice, companyName: companyName};
         });
-
-        return (
-          <div>
-          {
-            processed.map( product => <div key={ product.id }>
-              { product.name }
-              <br />
-              { product.suggestedPrice }.00
-              <hr />
-            </div>)
+          //filter the products and check match.params and see if its underFive or fiveAndOver
+          const _products = products.filter( product => product.suggestedPrice < 5 )
+          const products_ = products.filter( product => product.suggestedPrice >= 5 )
+          let _underFive;
+          let _fiveAndOver;
+          if (match.params.priceRange === 'underFive') {
+              _underFive = _products.map( product => <div key={ product.id }>
+                  { product.name }
+                <br />
+                  { product.suggestedPrice }.00
+                <hr />
+              </div>)
+          } else if (match.params.priceRange === 'fiveAndOver') {
+            _fiveAndOver = products_.map( product => <div key={ product.id }>
+                  { product.name }
+                <br />
+                  { product.suggestedPrice }.00
+                <hr />
+              </div>)
           }
-          </div>
+        return (
+            <div>
+            {
+              <div>
+              { _underFive }
+              { _fiveAndOver }
+              </div>
+              // _fiveAndOver 
+              // (match.params.priceRange === 'underFive') ?
+              //   _products.map( product => <div key={ product.id }>
+              //     { product.name }
+              //   <br />
+              //     { product.suggestedPrice }.00
+              //   <hr />
+              // </div>)
+              // : (match.params.priceRange === 'fiveAndOver') 
+              //   products_.map( product => <div key={ product.id }>
+              //     { product.name }
+              //   <br />
+              //     { product.suggestedPrice }.00
+              //   <hr />
+              // </div>)
+              
+              // processed.map( product => <div key={ product.id }>
+              //   { product.name }
+              //   <br />
+              //   { product.suggestedPrice }.00
+              //   <hr />
+              // </div>)
+            }
+            </div>
         );
       }
-
       class App extends Component {
         constructor() {
           super();
           this.state = {
-            underTen: [],
-            tenAndOver: [],
+            underFive: [],
+            fiveAndOver: [],
             products: [],
             companies: [],
-            offerings: []
+            offerings: [],
           }
         }
         async componentDidMount() {
@@ -94,28 +135,23 @@
           this.setState({ products, companies, offerings });
         }
         render() {
-          const { underTen, tenAndOver, products, companies, offerings, match } = this.state
-          // console.log(match)
-          // {if (match.path === '/products/underTen') ? 'hi' : 'no' }
+          const { underFive, fiveAndOver, products, companies, offerings, match } = this.state
           return (  
             <HashRouter>
               <Route render={ ({ location }) => <Nav path = { location.pathname } products = { products } />  } />
               <Switch>
-                <Route path='/products/underTen'  render = { (props) => <Products
+                <Route exact path='/products/:priceRange' render = { (props) => <Products
                     match = { props.match }
                     products = { products }
                     companies = { companies } 
                     offerings = { offerings } 
                   /> } 
                 />
-                <Route path='/products/tenAndOver' render = { (props) => <Products
-                    match = { props.match }
-                    products = { products }
-                    companies = { companies } 
-                    offerings = { offerings }
-                  /> } 
+                <Route path='/products/:priceRange/:id?' render = { (props) => 
+                    console.log(props.match.params.id)
+                 } 
                 />
-                <Redirect to='/products/underTen' />
+                <Redirect to='/products/underFive' />
               </Switch>
             </HashRouter>
           );
@@ -123,7 +159,7 @@
       }
 
       const root = document.querySelector('#root');
-      render( <App />, root ); 
+      render( <App /> , root ); 
     </script>
   </body>
 </html>
